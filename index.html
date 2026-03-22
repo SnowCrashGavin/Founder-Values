@@ -14,6 +14,7 @@
     --text: #222;
     --muted: #6b7280;
     --border: #d1d5db;
+    --success: #16a34a;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
@@ -116,15 +117,12 @@
     align-items: center;
     justify-content: center;
   }
-  /* --- Value overlays (triangle corners) --- */
-  .ov-val1 { top: 13%; left: 38%; width: 24%; height: 12%; color: #1a1a1a; font-size: clamp(10px, 1.6vw, 16px); text-shadow: 1px 1px 2px rgba(255,255,255,0.6); }
-  .ov-val2 { top: 60%; left: 16%; width: 24%; height: 12%; color: #1a1a1a; font-size: clamp(10px, 1.6vw, 16px); text-shadow: 1px 1px 2px rgba(255,255,255,0.6); }
-  .ov-val3 { top: 60%; left: 60%; width: 24%; height: 12%; color: #1a1a1a; font-size: clamp(10px, 1.6vw, 16px); text-shadow: 1px 1px 2px rgba(255,255,255,0.6); }
-  /* --- Stakeholder overlays (circle segments) --- */
-  .ov-sh1 { top: 10%; left: 20%; width: 20%; height: 16%; color: #fff; font-size: clamp(9px, 1.4vw, 14px); }
-  .ov-sh2 { top: 10%; left: 60%; width: 20%; height: 16%; color: #fff; font-size: clamp(9px, 1.4vw, 14px); }
-  .ov-sh3 { top: 72%; left: 30%; width: 40%; height: 14%; color: #fff; font-size: clamp(9px, 1.4vw, 14px); }
-  /* --- Context overlays (rectangle: lower-left blue, upper-right green) --- */
+  .ov-val1 { top: 24%; left: 38%; width: 24%; height: 10%; color: #1a1a1a; font-size: clamp(10px, 1.6vw, 16px); text-shadow: 1px 1px 2px rgba(255,255,255,0.6); }
+  .ov-val2 { top: 50%; left: 26%; width: 20%; height: 10%; color: #1a1a1a; font-size: clamp(10px, 1.6vw, 16px); text-shadow: 1px 1px 2px rgba(255,255,255,0.6); }
+  .ov-val3 { top: 50%; left: 54%; width: 20%; height: 10%; color: #1a1a1a; font-size: clamp(10px, 1.6vw, 16px); text-shadow: 1px 1px 2px rgba(255,255,255,0.6); }
+  .ov-sh1 { top: 15%; left: 21%; width: 16%; height: 14%; color: #fff; font-size: clamp(9px, 1.4vw, 14px); }
+  .ov-sh2 { top: 15%; left: 63%; width: 16%; height: 14%; color: #fff; font-size: clamp(9px, 1.4vw, 14px); }
+  .ov-sh3 { top: 73%; left: 32%; width: 36%; height: 12%; color: #fff; font-size: clamp(9px, 1.4vw, 14px); }
   .ov-ctx1 { top: 78%; left: 2%;  width: 24%; height: 14%; color: #fff; font-size: clamp(9px, 1.3vw, 14px); }
   .ov-ctx2 { top: 3%;  left: 72%; width: 26%; height: 14%; color: #fff; font-size: clamp(9px, 1.3vw, 14px); }
   .btn-row {
@@ -148,6 +146,9 @@
   .btn-accent:hover { background: #c98a10; }
   .btn-outline { background: transparent; color: var(--primary); border: 2px solid var(--primary); }
   .btn-outline:hover { background: var(--primary); color: #fff; }
+  .btn-success { background: var(--success); color: #fff; font-size: 1rem; padding: 14px 32px; }
+  .btn-success:hover { background: #15803d; }
+  .btn-success:disabled { background: #9ca3af; cursor: not-allowed; }
   .progress-bar {
     width: 100%;
     height: 6px;
@@ -164,6 +165,26 @@
   }
   .counter { font-size: 0.8rem; color: var(--muted); margin-bottom: 8px; text-align: right; }
   .instructions { font-size: 0.88rem; color: var(--muted); line-height: 1.5; margin-bottom: 16px; }
+  .submit-row {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .submit-status {
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .submit-status.success {
+    color: var(--success);
+    font-weight: 600;
+  }
+  .submit-status.error {
+    color: #dc2626;
+    font-weight: 600;
+  }
 </style>
 </head>
 <body>
@@ -174,17 +195,16 @@
 </div>
 
 <div class="container">
-  <!-- LEFT: Survey Form -->
   <div class="panel">
     <h2>Your Responses</h2>
     <p class="instructions">
       Enter your responses below. As you type, your words will appear live on the diagram to the right.
-      When finished, export your personalized diagram or download response data.
+      When finished, click Submit to record your responses, then export your personalized diagram.
     </p>
     <div class="counter" id="progressText">0 of 8 completed</div>
     <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
 
-    <div class="section-label label-values">â² Founder Values (3)</div>
+    <div class="section-label label-values">&#9650; FOUNDER VALUES (3)</div>
     <div class="input-group">
       <label>Value 1</label>
       <input type="text" id="val1" placeholder="e.g., Integrity" maxlength="40" oninput="update()">
@@ -198,7 +218,7 @@
       <input type="text" id="val3" placeholder="e.g., Resilience" maxlength="40" oninput="update()">
     </div>
 
-    <div class="section-label label-stakeholders">â Stakeholders (3)</div>
+    <div class="section-label label-stakeholders">&#9679; STAKEHOLDERS (3)</div>
     <div class="input-group">
       <label>Stakeholder 1</label>
       <input type="text" id="sh1" placeholder="e.g., Investors" maxlength="40" oninput="update()">
@@ -212,7 +232,7 @@
       <input type="text" id="sh3" placeholder="e.g., Customers" maxlength="40" oninput="update()">
     </div>
 
-    <div class="section-label label-context">â  Context (2)</div>
+    <div class="section-label label-context">&#9632; CONTEXT (2)</div>
     <div class="input-group">
       <label>Context 1</label>
       <input type="text" id="ctx1" placeholder="e.g., Market Conditions" maxlength="40" oninput="update()">
@@ -222,28 +242,29 @@
       <input type="text" id="ctx2" placeholder="e.g., Regulatory Environment" maxlength="40" oninput="update()">
     </div>
 
+    <div class="submit-row">
+      <button class="btn btn-success" id="submitBtn" onclick="submitResponses()">Submit Responses</button>
+      <span class="submit-status" id="submitStatus"></span>
+    </div>
+
     <div class="btn-row">
-      <button class="btn btn-primary" onclick="exportImage()">â¬ Export as PNG</button>
-      <button class="btn btn-accent" onclick="exportData('json')">ð Export JSON</button>
-      <button class="btn btn-outline" onclick="exportData('csv')">ð Export CSV</button>
-      <button class="btn btn-outline" onclick="resetForm()">âº Reset</button>
+      <button class="btn btn-primary" onclick="exportImage()">Export as PNG</button>
+      <button class="btn btn-accent" onclick="exportData('json')">Export JSON</button>
+      <button class="btn btn-outline" onclick="exportData('csv')">Export CSV</button>
+      <button class="btn btn-outline" onclick="resetForm()">Reset</button>
     </div>
   </div>
 
-  <!-- RIGHT: Diagram with Live Overlay -->
   <div class="panel">
     <h2>Live Diagram Preview</h2>
     <div class="diagram-wrapper" id="diagramCapture">
       <img id="diagramImg" src="https://raw.githubusercontent.com/SnowCrashGavin/Founder-Values/main/Slide1.jpeg" alt="Founder Values Diagram">
-      <!-- Value overlays (white triangle) -->
       <div class="overlay-text ov-val1" id="ov-val1"></div>
       <div class="overlay-text ov-val2" id="ov-val2"></div>
       <div class="overlay-text ov-val3" id="ov-val3"></div>
-      <!-- Stakeholder overlays (circle segments) -->
       <div class="overlay-text ov-sh1" id="ov-sh1"></div>
       <div class="overlay-text ov-sh2" id="ov-sh2"></div>
       <div class="overlay-text ov-sh3" id="ov-sh3"></div>
-      <!-- Context overlays (rectangle halves) -->
       <div class="overlay-text ov-ctx1" id="ov-ctx1"></div>
       <div class="overlay-text ov-ctx2" id="ov-ctx2"></div>
     </div>
@@ -253,16 +274,63 @@
 <script>
 const fields = ['val1','val2','val3','sh1','sh2','sh3','ctx1','ctx2'];
 
+const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzZ1fLaxAFBYf_xH1YFhpaao7C9WgET1EnmjvIP6ia1eyywBipAxbRIN6GseyEdqJQ2nA/exec';
+
 function update() {
   fields.forEach(id => {
     const el = document.getElementById('ov-' + id);
     const val = document.getElementById(id).value.trim();
     el.textContent = val;
   });
-  // Update progress
   const filled = fields.filter(id => document.getElementById(id).value.trim().length > 0).length;
   document.getElementById('progressFill').style.width = ((filled / 8) * 100) + '%';
   document.getElementById('progressText').textContent = filled + ' of 8 completed';
+}
+
+function submitResponses() {
+  const data = {
+    timestamp: new Date().toISOString(),
+    value_1: document.getElementById('val1').value.trim(),
+    value_2: document.getElementById('val2').value.trim(),
+    value_3: document.getElementById('val3').value.trim(),
+    stakeholder_1: document.getElementById('sh1').value.trim(),
+    stakeholder_2: document.getElementById('sh2').value.trim(),
+    stakeholder_3: document.getElementById('sh3').value.trim(),
+    context_1: document.getElementById('ctx1').value.trim(),
+    context_2: document.getElementById('ctx2').value.trim()
+  };
+
+  const filled = fields.filter(id => document.getElementById(id).value.trim().length > 0).length;
+  if (filled === 0) {
+    document.getElementById('submitStatus').textContent = 'Please fill in at least one field.';
+    document.getElementById('submitStatus').className = 'submit-status error';
+    return;
+  }
+
+  const btn = document.getElementById('submitBtn');
+  const status = document.getElementById('submitStatus');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+  status.textContent = '';
+  status.className = 'submit-status';
+
+  fetch(GOOGLE_SHEETS_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  })
+  .then(() => {
+    status.textContent = 'Submitted successfully! Your responses have been recorded.';
+    status.className = 'submit-status success';
+    btn.textContent = 'Submitted';
+  })
+  .catch(err => {
+    status.textContent = 'Submission failed. You can still export your data below.';
+    status.className = 'submit-status error';
+    btn.disabled = false;
+    btn.textContent = 'Submit Responses';
+  });
 }
 
 function exportImage() {
@@ -323,6 +391,10 @@ function exportData(format) {
 function resetForm() {
   if (!confirm('Clear all responses?')) return;
   fields.forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('submitBtn').disabled = false;
+  document.getElementById('submitBtn').textContent = 'Submit Responses';
+  document.getElementById('submitStatus').textContent = '';
+  document.getElementById('submitStatus').className = 'submit-status';
   update();
 }
 </script>
