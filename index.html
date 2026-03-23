@@ -48,7 +48,6 @@
     border-radius: 12px;
     box-shadow: 0 1px 4px rgba(0,0,0,0.08);
     padding: 28px;
-    overflow: visible;
   }
   .panel h2 {
     font-size: 1.1rem;
@@ -114,7 +113,7 @@
     text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
     line-height: 1.2;
     word-wrap: break-word;
-    overflow: visible;
+    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -207,6 +206,16 @@
       Enter your responses below. As you type, your words will appear live on the diagram to the right.
       When finished, click Submit to record your responses, then export your personalized diagram.
     </p>
+    <div class="section-label" style="color:#1a3a5c; margin-top:0;">&#9998; RESPONDENT INFO</div>
+    <div class="input-group">
+      <label>Name <span style="color:#dc2626">*</span></label>
+      <input type="text" id="respName" placeholder="Your full name" maxlength="80" oninput="update()">
+    </div>
+    <div class="input-group">
+      <label>Email <span style="color:#dc2626">*</span></label>
+      <input type="email" id="respEmail" placeholder="you@example.com" maxlength="120" oninput="update()">
+    </div>
+
     <div class="counter" id="progressText">0 of 8 completed</div>
     <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
 
@@ -298,8 +307,24 @@ function update() {
 }
 
 function submitResponses() {
+  const name = document.getElementById('respName').value.trim();
+  const email = document.getElementById('respEmail').value.trim();
+
+  if (!name || !email) {
+    document.getElementById('submitStatus').textContent = 'Name and Email are required.';
+    document.getElementById('submitStatus').className = 'submit-status error';
+    return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    document.getElementById('submitStatus').textContent = 'Please enter a valid email address.';
+    document.getElementById('submitStatus').className = 'submit-status error';
+    return;
+  }
+
   const data = {
     timestamp: new Date().toISOString(),
+    name: name,
+    email: email,
     value_1: document.getElementById('val1').value.trim(),
     value_2: document.getElementById('val2').value.trim(),
     value_3: document.getElementById('val3').value.trim(),
@@ -312,7 +337,7 @@ function submitResponses() {
 
   const filled = fields.filter(id => document.getElementById(id).value.trim().length > 0).length;
   if (filled === 0) {
-    document.getElementById('submitStatus').textContent = 'Please fill in at least one field.';
+    document.getElementById('submitStatus').textContent = 'Please fill in at least one survey field.';
     document.getElementById('submitStatus').className = 'submit-status error';
     return;
   }
@@ -356,6 +381,10 @@ function exportImage() {
 function exportData(format) {
   const data = {
     timestamp: new Date().toISOString(),
+    respondent: {
+      name: document.getElementById('respName').value.trim(),
+      email: document.getElementById('respEmail').value.trim()
+    },
     values: {
       value_1: document.getElementById('val1').value.trim(),
       value_2: document.getElementById('val2').value.trim(),
@@ -379,6 +408,8 @@ function exportData(format) {
   } else {
     const rows = [
       ['Category','Field','Response'],
+      ['Respondent','Name', data.respondent.name],
+      ['Respondent','Email', data.respondent.email],
       ['Values','Value 1', data.values.value_1],
       ['Values','Value 2', data.values.value_2],
       ['Values','Value 3', data.values.value_3],
@@ -401,630 +432,8 @@ function exportData(format) {
 function resetForm() {
   if (!confirm('Clear all responses?')) return;
   fields.forEach(id => { document.getElementById(id).value = ''; });
-  document.getElementById('submitBtn').disabled = false;
-  document.getElementById('submitBtn').textContent = 'Submit Responses';
-  document.getElementById('submitStatus').textContent = '';
-  document.getElementById('submitStatus').className = 'submit-status';
-  update();
-}
-</script>
-</body>
-</html><!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Founder Values Survey</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<style>
-  :root {
-    --primary: #1a3a5c;
-    --accent: #e8a020;
-    --bg: #f4f6f8;
-    --card: #ffffff;
-    --text: #222;
-    --muted: #6b7280;
-    --border: #d1d5db;
-    --success: #16a34a;
-  }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body {
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-  }
-  .header {
-    background: var(--primary);
-    color: #fff;
-    padding: 28px 40px;
-    text-align: center;
-  }
-  .header h1 { font-size: 1.75rem; font-weight: 600; letter-spacing: -0.02em; }
-  .header p { font-size: 0.95rem; color: #b0c4de; margin-top: 6px; }
-  .container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 32px 24px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 32px;
-    align-items: start;
-  }
-  @media (max-width: 900px) {
-    .container { grid-template-columns: 1fr; }
-  }
-  .panel {
-    background: var(--card);
-    border-radius: 12px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-    padding: 28px;
-  }
-  .panel h2 {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--primary);
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid var(--accent);
-  }
-  .section-label {
-    font-size: 0.8rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-bottom: 12px;
-    margin-top: 20px;
-  }
-  .section-label:first-of-type { margin-top: 0; }
-  .label-values { color: #555; }
-  .label-stakeholders { color: #b8860b; }
-  .label-context { color: #1a6b3c; }
-  .input-group {
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .input-group label {
-    font-size: 0.85rem;
-    color: var(--muted);
-    min-width: 90px;
-    flex-shrink: 0;
-  }
-  .input-group input {
-    flex: 1;
-    padding: 10px 14px;
-    border: 1.5px solid var(--border);
-    border-radius: 8px;
-    font-size: 0.95rem;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    outline: none;
-  }
-  .input-group input:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(232,160,32,0.15);
-  }
-  .diagram-wrapper {
-    position: relative;
-    display: inline-block;
-    width: 100%;
-  }
-  .diagram-wrapper img {
-    width: 100%;
-    display: block;
-    border-radius: 8px;
-  }
-  .overlay-text {
-    position: absolute;
-    font-weight: 700;
-    text-align: center;
-    pointer-events: none;
-    text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
-    line-height: 1.2;
-    word-wrap: break-word;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  /* --- Value overlays (INSIDE the white triangle) --- */
-  .ov-val1 { top: 25%; left: 42%; width: 16%; height: 10%; color: #1a1a1a; font-size: clamp(10px, 1.6vw, 16px); text-shadow: 1px 1px 2px rgba(255,255,255,0.6); }
-  .ov-val2 { top: 42%; left: 38%; width: 14%; height: 10%; color: #1a1a1a; font-size: clamp(10px, 1.6vw, 16px); text-shadow: 1px 1px 2px rgba(255,255,255,0.6); }
-  .ov-val3 { top: 42%; left: 50%; width: 14%; height: 10%; color: #1a1a1a; font-size: clamp(10px, 1.6vw, 16px); text-shadow: 1px 1px 2px rgba(255,255,255,0.6); }
-  /* --- Stakeholder overlays (INSIDE colored circle crescents) --- */
-  .ov-sh1 { top: 18%; left: 30%; width: 14%; height: 14%; color: #fff; font-size: clamp(9px, 1.4vw, 14px); }
-  .ov-sh2 { top: 18%; left: 56%; width: 14%; height: 14%; color: #fff; font-size: clamp(9px, 1.4vw, 14px); }
-  .ov-sh3 { top: 72%; left: 36%; width: 28%; height: 14%; color: #fff; font-size: clamp(9px, 1.4vw, 14px); }
-  /* --- Context overlays (rectangle corners: lower-left blue, upper-right green) --- */
-  .ov-ctx1 { top: 84%; left: 2%;  width: 18%; height: 10%; color: #fff; font-size: clamp(9px, 1.3vw, 14px); }
-  .ov-ctx2 { top: 1%;  left: 80%; width: 18%; height: 8%; color: #fff; font-size: clamp(9px, 1.3vw, 14px); }
-  .btn-row {
-    display: flex;
-    gap: 12px;
-    margin-top: 24px;
-    flex-wrap: wrap;
-  }
-  .btn {
-    padding: 12px 24px;
-    border: none;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .btn-primary { background: var(--primary); color: #fff; }
-  .btn-primary:hover { background: #254d75; }
-  .btn-accent { background: var(--accent); color: #fff; }
-  .btn-accent:hover { background: #c98a10; }
-  .btn-outline { background: transparent; color: var(--primary); border: 2px solid var(--primary); }
-  .btn-outline:hover { background: var(--primary); color: #fff; }
-  .btn-success { background: var(--success); color: #fff; font-size: 1rem; padding: 14px 32px; }
-  .btn-success:hover { background: #15803d; }
-  .btn-success:disabled { background: #9ca3af; cursor: not-allowed; }
-  .progress-bar {
-    width: 100%;
-    height: 6px;
-    background: #e5e7eb;
-    border-radius: 3px;
-    margin-bottom: 20px;
-    overflow: hidden;
-  }
-  .progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--primary), var(--accent));
-    border-radius: 3px;
-    transition: width 0.4s ease;
-  }
-  .counter { font-size: 0.8rem; color: var(--muted); margin-bottom: 8px; text-align: right; }
-  .instructions { font-size: 0.88rem; color: var(--muted); line-height: 1.5; margin-bottom: 16px; }
-  .submit-row {
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-  .submit-status {
-    font-size: 0.85rem;
-    color: var(--muted);
-  }
-  .submit-status.success {
-    color: var(--success);
-    font-weight: 600;
-  }
-  .submit-status.error {
-    color: #dc2626;
-    font-weight: 600;
-  }
-</style>
-</head>
-<body>
-
-<div class="header">
-  <h1>Founder Values Framework Survey</h1>
-  <p>Identify the Values, Stakeholders, and Context that shape your decision-making</p>
-</div>
-
-<div class="container">
-  <!-- LEFT: Survey Form -->
-  <div class="panel">
-    <h2>Your Responses</h2>
-    <p class="instructions">
-      Enter your responses below. As you type, your words will appear live on the diagram to the right.
-      When finished, click Submit to record your responses, then export your personalized diagram.
-    </p>
-    <div class="counter" id="progressText">0 of 8 completed</div>
-    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
-
-    <div class="section-label label-values">&#9650; FOUNDER VALUES (3)</div>
-    <div class="input-group">
-      <label>Value 1</label>
-      <input type="text" id="val1" placeholder="e.g., Integrity" maxlength="40" oninput="update()">
-    </div>
-    <div class="input-group">
-      <label>Value 2</label>
-      <input type="text" id="val2" placeholder="e.g., Innovation" maxlength="40" oninput="update()">
-    </div>
-    <div class="input-group">
-      <label>Value 3</label>
-      <input type="text" id="val3" placeholder="e.g., Resilience" maxlength="40" oninput="update()">
-    </div>
-
-    <div class="section-label label-stakeholders">&#9679; STAKEHOLDERS (3)</div>
-    <div class="input-group">
-      <label>Stakeholder 1</label>
-      <input type="text" id="sh1" placeholder="e.g., Investors" maxlength="40" oninput="update()">
-    </div>
-    <div class="input-group">
-      <label>Stakeholder 2</label>
-      <input type="text" id="sh2" placeholder="e.g., Employees" maxlength="40" oninput="update()">
-    </div>
-    <div class="input-group">
-      <label>Stakeholder 3</label>
-      <input type="text" id="sh3" placeholder="e.g., Customers" maxlength="40" oninput="update()">
-    </div>
-
-    <div class="section-label label-context">&#9632; CONTEXT (2)</div>
-    <div class="input-group">
-      <label>Context 1</label>
-      <input type="text" id="ctx1" placeholder="e.g., Market Conditions" maxlength="40" oninput="update()">
-    </div>
-    <div class="input-group">
-      <label>Context 2</label>
-      <input type="text" id="ctx2" placeholder="e.g., Regulatory Environment" maxlength="40" oninput="update()">
-    </div>
-
-    <div class="submit-row">
-      <button class="btn btn-success" id="submitBtn" onclick="submitResponses()">Submit Responses</button>
-      <span class="submit-status" id="submitStatus"></span>
-    </div>
-
-    <div class="btn-row">
-      <button class="btn btn-primary" onclick="exportImage()">Export as PNG</button>
-      <button class="btn btn-accent" onclick="exportData('json')">Export JSON</button>
-      <button class="btn btn-outline" onclick="exportData('csv')">Export CSV</button>
-      <button class="btn btn-outline" onclick="resetForm()">Reset</button>
-    </div>
-  </div>
-
-  <!-- RIGHT: Diagram with Live Overlay -->
-  <div class="panel">
-    <h2>Live Diagram Preview</h2>
-    <div class="diagram-wrapper" id="diagramCapture">
-      <img id="diagramImg" src="https://raw.githubusercontent.com/SnowCrashGavin/Founder-Values/main/Slide1.jpeg" alt="Founder Values Diagram">
-      <!-- Value overlays (inside white triangle) -->
-      <div class="overlay-text ov-val1" id="ov-val1"></div>
-      <div class="overlay-text ov-val2" id="ov-val2"></div>
-      <div class="overlay-text ov-val3" id="ov-val3"></div>
-      <!-- Stakeholder overlays (inside circle segments) -->
-      <div class="overlay-text ov-sh1" id="ov-sh1"></div>
-      <div class="overlay-text ov-sh2" id="ov-sh2"></div>
-      <div class="overlay-text ov-sh3" id="ov-sh3"></div>
-      <!-- Context overlays (rectangle corners) -->
-      <div class="overlay-text ov-ctx1" id="ov-ctx1"></div>
-      <div class="overlay-text ov-ctx2" id="ov-ctx2"></div>
-    </div>
-  </div>
-</div>
-
-<script>
-const fields = ['val1','val2','val3','sh1','sh2','sh3','ctx1','ctx2'];
-
-const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzZ1fLaxAFBYf_xH1YFhpaao7C9WgET1EnmjvIP6ia1eyywBipAxbRIN6GseyEdqJQ2nA/exec';
-
-function update() {
-  fields.forEach(id => {
-    const el = document.getElementById('ov-' + id);
-    const val = document.getElementById(id).value.trim();
-    el.textContent = val;
-  });
-  const filled = fields.filter(id => document.getElementById(id).value.trim().length > 0).length;
-  document.getElementById('progressFill').style.width = ((filled / 8) * 100) + '%';
-  document.getElementById('progressText').textContent = filled + ' of 8 completed';
-}
-
-function submitResponses() {
-  const data = {
-    timestamp: new Date().toISOString(),
-    value_1: document.getElementById('val1').value.trim(),
-    value_2: document.getElementById('val2').value.trim(),
-    value_3: document.getElementById('val3').value.trim(),
-    stakeholder_1: document.getElementById('sh1').value.trim(),
-    stakeholder_2: document.getElementById('sh2').value.trim(),
-    stakeholder_3: document.getElementById('sh3').value.trim(),
-    context_1: document.getElementById('ctx1').value.trim(),
-    context_2: document.getElementById('ctx2').value.trim()
-  };
-
-  const filled = fields.filter(id => document.getElementById(id).value.trim().length > 0).length;
-  if (filled === 0) {
-    document.getElementById('submitStatus').textContent = 'Please fill in at least one field.';
-    document.getElementById('submitStatus').className = 'submit-status error';
-    return;
-  }
-
-  const btn = document.getElementById('submitBtn');
-  const status = document.getElementById('submitStatus');
-  btn.disabled = true;
-  btn.textContent = 'Submitting...';
-  status.textContent = '';
-  status.className = 'submit-status';
-
-  fetch(GOOGLE_SHEETS_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  })
-  .then(() => {
-    status.textContent = 'Submitted successfully! Your responses have been recorded.';
-    status.className = 'submit-status success';
-    btn.textContent = 'Submitted';
-  })
-  .catch(err => {
-    status.textContent = 'Submission failed. You can still export your data below.';
-    status.className = 'submit-status error';
-    btn.disabled = false;
-    btn.textContent = 'Submit Responses';
-  });
-}
-
-function exportImage() {
-  const node = document.getElementById('diagramCapture');
-  html2canvas(node, { useCORS: true, scale: 2, backgroundColor: null }).then(canvas => {
-    const link = document.createElement('a');
-    link.download = 'Founder_Values_Diagram_' + new Date().toISOString().slice(0,10) + '.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-  });
-}
-
-function exportData(format) {
-  const data = {
-    timestamp: new Date().toISOString(),
-    values: {
-      value_1: document.getElementById('val1').value.trim(),
-      value_2: document.getElementById('val2').value.trim(),
-      value_3: document.getElementById('val3').value.trim()
-    },
-    stakeholders: {
-      stakeholder_1: document.getElementById('sh1').value.trim(),
-      stakeholder_2: document.getElementById('sh2').value.trim(),
-      stakeholder_3: document.getElementById('sh3').value.trim()
-    },
-    context: {
-      context_1: document.getElementById('ctx1').value.trim(),
-      context_2: document.getElementById('ctx2').value.trim()
-    }
-  };
-
-  let blob, filename;
-  if (format === 'json') {
-    blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    filename = 'Founder_Values_Responses_' + new Date().toISOString().slice(0,10) + '.json';
-  } else {
-    const rows = [
-      ['Category','Field','Response'],
-      ['Values','Value 1', data.values.value_1],
-      ['Values','Value 2', data.values.value_2],
-      ['Values','Value 3', data.values.value_3],
-      ['Stakeholders','Stakeholder 1', data.stakeholders.stakeholder_1],
-      ['Stakeholders','Stakeholder 2', data.stakeholders.stakeholder_2],
-      ['Stakeholders','Stakeholder 3', data.stakeholders.stakeholder_3],
-      ['Context','Context 1', data.context.context_1],
-      ['Context','Context 2', data.context.context_2]
-    ];
-    const csv = rows.map(r => r.map(c => '"' + (c||'').replace(/"/g,'""') + '"').join(',')).join('\n');
-    blob = new Blob([csv], { type: 'text/csv' });
-    filename = 'Founder_Values_Responses_' + new Date().toISOString().slice(0,10) + '.csv';
-  }
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = filename;
-  link.click();
-}
-
-function resetForm() {
-  if (!confirm('Clear all responses?')) return;
-  fields.forEach(id => { document.getElementById(id).value = ''; });
-  document.getElementById('submitBtn').disabled = false;
-  document.getElementById('submitBtn').textContent = 'Submit Responses';
-  document.getElementById('submitStatus').textContent = '';
-  document.getElementById('submitStatus').className = 'submit-status';
-  update();
-}
-</script>
-</body>
-</html><!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Founder Values Survey</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<style>
-  :root {
-    --primary: #1a3a5c;
-    --accent: #e8a020;
-    --bg: #f4f6f8;
-    --card: #ffffff;
-    --text: #222;
-    --muted: #6b7280;
-    --border: #d1d5db;
-    --success: #16a34a;
-  }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-  .header { background: var(--primary); color: #fff; padding: 28px 40px; text-align: center; }
-  .header h1 { font-size: 1.75rem; font-weight: 600; letter-spacing: -0.02em; }
-  .header p { font-size: 0.95rem; color: #b0c4de; margin-top: 6px; }
-  .container { max-width: 1400px; margin: 0 auto; padding: 32px 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start; }
-  @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
-  .panel { background: var(--card); border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); padding: 28px; }
-  .panel h2 { font-size: 1.1rem; font-weight: 600; color: var(--primary); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--accent); }
-  .section-label { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; margin-top: 20px; }
-  .section-label:first-of-type { margin-top: 0; }
-  .label-values { color: #555; }
-  .label-stakeholders { color: #b8860b; }
-  .label-context { color: #1a6b3c; }
-  .input-group { margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
-  .input-group label { font-size: 0.85rem; color: var(--muted); min-width: 90px; flex-shrink: 0; }
-  .input-group input { flex: 1; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 0.95rem; transition: border-color 0.2s, box-shadow 0.2s; outline: none; }
-  .input-group input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(232,160,32,0.15); }
-  .diagram-wrapper { position: relative; display: inline-block; width: 100%; overflow: visible; }
-  .diagram-wrapper img { width: 100%; display: block; border-radius: 8px; }
-  .overlay-text { position: absolute; font-weight: 700; text-align: center; pointer-events: none; text-shadow: 1px 1px 3px rgba(0,0,0,0.5); line-height: 1.2; word-wrap: break-word; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-  .ov-val1 { top: 24%; left: 38%; width: 24%; height: 10%; color: #1a1a1a; font-size: clamp(10px, 1.6vw, 16px); text-shadow: 1px 1px 2px rgba(255,255,255,0.6); }
-  .ov-val2 { top: 50%; left: 26%; width: 20%; height: 10%; color: #1a1a1a; font-size: clamp(10px, 1.6vw, 16px); text-shadow: 1px 1px 2px rgba(255,255,255,0.6); }
-  .ov-val3 { top: 50%; left: 54%; width: 20%; height: 10%; color: #1a1a1a; font-size: clamp(10px, 1.6vw, 16px); text-shadow: 1px 1px 2px rgba(255,255,255,0.6); }
-  .ov-sh1 { top: 20%; left: 22%; width: 16%; height: 14%; color: #fff; font-size: clamp(9px, 1.4vw, 14px); }
-  .ov-sh2 { top: 22%; left: 68%; width: 18%; height: 14%; color: #fff; font-size: clamp(9px, 1.4vw, 14px); }
-  .ov-sh3 { top: 68%; left: 32%; width: 36%; height: 12%; color: #fff; font-size: clamp(9px, 1.4vw, 14px); }
-  .ov-ctx1 { top: 76%; left: 1%; width: 18%; height: 10%; color: #fff; font-size: clamp(9px, 1.3vw, 14px); }
-  .ov-ctx2 { top: 2%; left: 76%; width: 22%; height: 10%; color: #fff; font-size: clamp(9px, 1.3vw, 14px); }
-  .btn-row { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
-  .btn { padding: 12px 24px; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-  .btn-primary { background: var(--primary); color: #fff; }
-  .btn-primary:hover { background: #254d75; }
-  .btn-accent { background: var(--accent); color: #fff; }
-  .btn-accent:hover { background: #c98a10; }
-  .btn-outline { background: transparent; color: var(--primary); border: 2px solid var(--primary); }
-  .btn-outline:hover { background: var(--primary); color: #fff; }
-  .btn-success { background: var(--success); color: #fff; font-size: 1rem; padding: 14px 32px; }
-  .btn-success:hover { background: #15803d; }
-  .btn-success:disabled { background: #9ca3af; cursor: not-allowed; }
-  .progress-bar { width: 100%; height: 6px; background: #e5e7eb; border-radius: 3px; margin-bottom: 20px; overflow: hidden; }
-  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 3px; transition: width 0.4s ease; }
-  .counter { font-size: 0.8rem; color: var(--muted); margin-bottom: 8px; text-align: right; }
-  .instructions { font-size: 0.88rem; color: var(--muted); line-height: 1.5; margin-bottom: 16px; }
-  .submit-row { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 16px; }
-  .submit-status { font-size: 0.85rem; color: var(--muted); }
-  .submit-status.success { color: var(--success); font-weight: 600; }
-  .submit-status.error { color: #dc2626; font-weight: 600; }
-</style>
-</head>
-<body>
-<div class="header">
-  <h1>Founder Values Framework Survey</h1>
-  <p>Identify the Values, Stakeholders, and Context that shape your decision-making</p>
-</div>
-<div class="container">
-  <div class="panel">
-    <h2>Your Responses</h2>
-    <p class="instructions">Enter your responses below. As you type, your words will appear live on the diagram to the right. When finished, click Submit to record your responses, then export your personalized diagram.</p>
-    <div class="counter" id="progressText">0 of 8 completed</div>
-    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
-    <div class="section-label label-values">&#9650; FOUNDER VALUES (3)</div>
-    <div class="input-group"><label>Value 1</label><input type="text" id="val1" placeholder="e.g., Integrity" maxlength="40" oninput="update()"></div>
-    <div class="input-group"><label>Value 2</label><input type="text" id="val2" placeholder="e.g., Innovation" maxlength="40" oninput="update()"></div>
-    <div class="input-group"><label>Value 3</label><input type="text" id="val3" placeholder="e.g., Resilience" maxlength="40" oninput="update()"></div>
-    <div class="section-label label-stakeholders">&#9679; STAKEHOLDERS (3)</div>
-    <div class="input-group"><label>Stakeholder 1</label><input type="text" id="sh1" placeholder="e.g., Investors" maxlength="40" oninput="update()"></div>
-    <div class="input-group"><label>Stakeholder 2</label><input type="text" id="sh2" placeholder="e.g., Employees" maxlength="40" oninput="update()"></div>
-    <div class="input-group"><label>Stakeholder 3</label><input type="text" id="sh3" placeholder="e.g., Customers" maxlength="40" oninput="update()"></div>
-    <div class="section-label label-context">&#9632; CONTEXT (2)</div>
-    <div class="input-group"><label>Context 1</label><input type="text" id="ctx1" placeholder="e.g., Market Conditions" maxlength="40" oninput="update()"></div>
-    <div class="input-group"><label>Context 2</label><input type="text" id="ctx2" placeholder="e.g., Regulatory Environment" maxlength="40" oninput="update()"></div>
-    <div class="submit-row">
-      <button class="btn btn-success" id="submitBtn" onclick="submitResponses()">Submit Responses</button>
-      <span class="submit-status" id="submitStatus"></span>
-    </div>
-    <div class="btn-row">
-      <button class="btn btn-primary" onclick="exportImage()">Export as PNG</button>
-      <button class="btn btn-accent" onclick="exportData('json')">Export JSON</button>
-      <button class="btn btn-outline" onclick="exportData('csv')">Export CSV</button>
-      <button class="btn btn-outline" onclick="resetForm()">Reset</button>
-    </div>
-  </div>
-  <div class="panel">
-    <h2>Live Diagram Preview</h2>
-    <div class="diagram-wrapper" id="diagramCapture">
-      <img id="diagramImg" src="https://raw.githubusercontent.com/SnowCrashGavin/Founder-Values/main/Slide1.jpeg" alt="Founder Values Diagram">
-      <div class="overlay-text ov-val1" id="ov-val1"></div>
-      <div class="overlay-text ov-val2" id="ov-val2"></div>
-      <div class="overlay-text ov-val3" id="ov-val3"></div>
-      <div class="overlay-text ov-sh1" id="ov-sh1"></div>
-      <div class="overlay-text ov-sh2" id="ov-sh2"></div>
-      <div class="overlay-text ov-sh3" id="ov-sh3"></div>
-      <div class="overlay-text ov-ctx1" id="ov-ctx1"></div>
-      <div class="overlay-text ov-ctx2" id="ov-ctx2"></div>
-    </div>
-  </div>
-</div>
-<script>
-const fields = ['val1','val2','val3','sh1','sh2','sh3','ctx1','ctx2'];
-const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzZ1fLaxAFBYf_xH1YFhpaao7C9WgET1EnmjvIP6ia1eyywBipAxbRIN6GseyEdqJQ2nA/exec';
-
-function update() {
-  fields.forEach(id => {
-    document.getElementById('ov-' + id).textContent = document.getElementById(id).value.trim();
-  });
-  const filled = fields.filter(id => document.getElementById(id).value.trim().length > 0).length;
-  document.getElementById('progressFill').style.width = ((filled / 8) * 100) + '%';
-  document.getElementById('progressText').textContent = filled + ' of 8 completed';
-}
-
-function submitResponses() {
-  const data = {
-    timestamp: new Date().toISOString(),
-    value_1: document.getElementById('val1').value.trim(),
-    value_2: document.getElementById('val2').value.trim(),
-    value_3: document.getElementById('val3').value.trim(),
-    stakeholder_1: document.getElementById('sh1').value.trim(),
-    stakeholder_2: document.getElementById('sh2').value.trim(),
-    stakeholder_3: document.getElementById('sh3').value.trim(),
-    context_1: document.getElementById('ctx1').value.trim(),
-    context_2: document.getElementById('ctx2').value.trim()
-  };
-  const filled = fields.filter(id => document.getElementById(id).value.trim().length > 0).length;
-  if (filled === 0) {
-    document.getElementById('submitStatus').textContent = 'Please fill in at least one field.';
-    document.getElementById('submitStatus').className = 'submit-status error';
-    return;
-  }
-  const btn = document.getElementById('submitBtn');
-  const status = document.getElementById('submitStatus');
-  btn.disabled = true;
-  btn.textContent = 'Submitting...';
-  status.textContent = '';
-  status.className = 'submit-status';
-  fetch(GOOGLE_SHEETS_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  })
-  .then(() => {
-    status.textContent = 'Submitted successfully! Your responses have been recorded.';
-    status.className = 'submit-status success';
-    btn.textContent = 'Submitted';
-  })
-  .catch(err => {
-    status.textContent = 'Submission failed. You can still export your data below.';
-    status.className = 'submit-status error';
-    btn.disabled = false;
-    btn.textContent = 'Submit Responses';
-  });
-}
-
-function exportImage() {
-  html2canvas(document.getElementById('diagramCapture'), { useCORS: true, scale: 2, backgroundColor: null }).then(canvas => {
-    const link = document.createElement('a');
-    link.download = 'Founder_Values_Diagram_' + new Date().toISOString().slice(0,10) + '.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-  });
-}
-
-function exportData(format) {
-  const data = {
-    timestamp: new Date().toISOString(),
-    values: { value_1: document.getElementById('val1').value.trim(), value_2: document.getElementById('val2').value.trim(), value_3: document.getElementById('val3').value.trim() },
-    stakeholders: { stakeholder_1: document.getElementById('sh1').value.trim(), stakeholder_2: document.getElementById('sh2').value.trim(), stakeholder_3: document.getElementById('sh3').value.trim() },
-    context: { context_1: document.getElementById('ctx1').value.trim(), context_2: document.getElementById('ctx2').value.trim() }
-  };
-  let blob, filename;
-  if (format === 'json') {
-    blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    filename = 'Founder_Values_Responses_' + new Date().toISOString().slice(0,10) + '.json';
-  } else {
-    const rows = [['Category','Field','Response'],['Values','Value 1', data.values.value_1],['Values','Value 2', data.values.value_2],['Values','Value 3', data.values.value_3],['Stakeholders','Stakeholder 1', data.stakeholders.stakeholder_1],['Stakeholders','Stakeholder 2', data.stakeholders.stakeholder_2],['Stakeholders','Stakeholder 3', data.stakeholders.stakeholder_3],['Context','Context 1', data.context.context_1],['Context','Context 2', data.context.context_2]];
-    const csv = rows.map(r => r.map(c => '"' + (c||'').replace(/"/g,'""') + '"').join(',')).join('\n');
-    blob = new Blob([csv], { type: 'text/csv' });
-    filename = 'Founder_Values_Responses_' + new Date().toISOString().slice(0,10) + '.csv';
-  }
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = filename;
-  link.click();
-}
-
-function resetForm() {
-  if (!confirm('Clear all responses?')) return;
-  fields.forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('respName').value = '';
+  document.getElementById('respEmail').value = '';
   document.getElementById('submitBtn').disabled = false;
   document.getElementById('submitBtn').textContent = 'Submit Responses';
   document.getElementById('submitStatus').textContent = '';
